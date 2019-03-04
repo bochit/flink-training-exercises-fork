@@ -1,4 +1,7 @@
 .idea
+nycTaxiFares.gz
+nycTaxiRides.gz
+
 .cache
 scalastyle-output.xml
 .classpath
