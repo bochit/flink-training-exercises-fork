@@ -1,2 +1,1 @@
-This repository contains reference solutions and utility classes for the Flink Training exercises 
-on [http://training.data-artisans.com](http://training.data-artisans.com).
+Copy of project [http://training.data-artisans.com](http://training.data-artisans.com)
