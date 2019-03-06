@@ -33,6 +33,7 @@ import static org.junit.Assert.assertEquals;
 public class RidesAndFaresTest extends TaxiRideTestBase<Tuple2<TaxiRide, TaxiFare>> {
 
 	static Testable javaExercise = () -> RidesAndFaresExercise.main(new String[]{});
+//	static Testable javaExercise = () -> RidesAndFaresSolution.main(new String[]{});
 
 
 	final TaxiRide ride1 = testRide(1);

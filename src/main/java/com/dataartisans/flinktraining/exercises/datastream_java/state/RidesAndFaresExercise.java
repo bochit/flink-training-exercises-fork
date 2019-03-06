@@ -22,6 +22,8 @@ import com.dataartisans.flinktraining.exercises.datastream_java.sources.TaxiFare
 import com.dataartisans.flinktraining.exercises.datastream_java.sources.TaxiRideSource;
 import com.dataartisans.flinktraining.exercises.datastream_java.utils.ExerciseBase;
 import com.dataartisans.flinktraining.exercises.datastream_java.utils.MissingSolutionException;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
@@ -60,11 +62,11 @@ public class RidesAndFaresExercise extends ExerciseBase {
 		DataStream<TaxiRide> rides = env
 				.addSource(rideSourceOrTest(new TaxiRideSource(ridesFile, delay, servingSpeedFactor)))
 				.filter((TaxiRide ride) -> ride.isStart)
-				.keyBy("rideId");
+				.keyBy(ride -> ride.rideId);
 
 		DataStream<TaxiFare> fares = env
 				.addSource(fareSourceOrTest(new TaxiFareSource(faresFile, delay, servingSpeedFactor)))
-				.keyBy("rideId");
+				.keyBy(fare -> fare.rideId);
 
 		DataStream<Tuple2<TaxiRide, TaxiFare>> enrichedRides = rides
 				.connect(fares)
@@ -77,17 +79,36 @@ public class RidesAndFaresExercise extends ExerciseBase {
 
 	public static class EnrichmentFunction extends RichCoFlatMapFunction<TaxiRide, TaxiFare, Tuple2<TaxiRide, TaxiFare>> {
 
+		private ValueState<TaxiRide> rideStore;
+		private ValueState<TaxiFare> fareStore;
+
 		@Override
 		public void open(Configuration config) throws Exception {
-			throw new MissingSolutionException();
+//			throw new MissingSolutionException();
+			rideStore = getRuntimeContext().getState(new ValueStateDescriptor<>("ride", TaxiRide.class));
+			fareStore = getRuntimeContext().getState(new ValueStateDescriptor<>("fare", TaxiFare.class));
 		}
 
 		@Override
 		public void flatMap1(TaxiRide ride, Collector<Tuple2<TaxiRide, TaxiFare>> out) throws Exception {
+			TaxiFare fare = fareStore.value();
+			if (fare != null) {
+				fareStore.clear();
+				out.collect(new Tuple2(ride, fare));
+			} else {
+				rideStore.update(ride);
+			}
 		}
 
 		@Override
 		public void flatMap2(TaxiFare fare, Collector<Tuple2<TaxiRide, TaxiFare>> out) throws Exception {
+			TaxiRide ride = rideStore.value();
+			if (ride != null) {
+				rideStore.clear();
+				out.collect(new Tuple2(ride, fare));
+			} else {
+				fareStore.update(fare);
+			}
 		}
 	}
 }
