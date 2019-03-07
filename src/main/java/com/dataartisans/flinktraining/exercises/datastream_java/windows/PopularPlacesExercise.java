@@ -46,6 +46,8 @@ import org.apache.flink.util.Collector;
  * -input path-to-input-file
  *
  */
+
+// random comment testing commitr
 public class PopularPlacesExercise extends ExerciseBase {
 	public static void main(String[] args) throws Exception {
 
